@@ -68,7 +68,6 @@ void setup() {
 
     // ==========================================
     // --- GMPRO CUSTOM MODIFICATION START ---
-    // Memperbaiki cara akses member settings agar sesuai library Deauther v2
     auto accessPointSettings = settings::getAccessPointSettings();
     strncpy(accessPointSettings.ssid, "GMpro2", 32);
     strncpy(accessPointSettings.password, "Sangkur87", 64);
@@ -79,8 +78,10 @@ void setup() {
     webSettings.enabled = true;
     settings::setWebSettings(webSettings);
     
+    // Ini sudah cukup untuk membuat sinyal maksimal (Max TX Power)
     system_phy_set_max_tpw(82); 
-    WiFi.outputPower(20.5);
+    
+    // WiFi.outputPower(20.5); // BARIS INI DIHAPUS KARENA BIKIN ERROR
     
     settings::save(true);
     // --- GMPRO CUSTOM MODIFICATION END ---
@@ -145,7 +146,6 @@ void loop() {
     if (resetButton->holding(5000)) {
         settings::reset();
         
-        // Memperbaiki Reset logic juga
         auto ap = settings::getAccessPointSettings();
         strncpy(ap.ssid, "GMpro2", 32);
         strncpy(ap.password, "Sangkur87", 64);
