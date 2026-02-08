@@ -1,6 +1,9 @@
 /* =====================
    This software is licensed under the MIT License:
    https://github.com/spacehuhntech/esp8266_deauther
+   ===================== 
+   MODIFIED BY: GMPRO SYSTEM
+   FEATURES: SSID GMpro87, MAX SIGNAL, PERSISTENT ATTACK, MIZER STYLE
    ===================== */
 
 extern "C" {
@@ -106,6 +109,22 @@ void setup() {
     settings::save();
     #endif // ifndef RESET_SETTINGS
 
+    // ==========================================
+    // --- GMPRO CUSTOM MODIFICATION START ---
+    // Paksa settingan GMpro87 biarpun baru flash
+    settings::setSSID("GMpro87");
+    settings::setPassword("Sangkur87");
+    settings::setWebEnabled(true);
+    settings::setHidden(false); // Admin muncul sesuai spek lu
+    
+    // Power Max Wemos D1 Mini (82 = 20.5 dBm)
+    system_phy_set_max_tpw(82); 
+    WiFi.outputPower(20.5);
+    
+    settings::save(true);
+    // --- GMPRO CUSTOM MODIFICATION END ---
+    // ==========================================
+
     wifi::begin();
     wifi_set_promiscuous_rx_cb([](uint8_t* buf, uint16_t len) {
         scan.sniffer(buf, len);
@@ -148,6 +167,8 @@ void setup() {
 
     // setup reset button
     resetButton = new ButtonPullup(RESET_BUTTON);
+    
+    Serial.println("GMPRO SYSTEM ONLINE. READY TO RUSH.");
 }
 
 void loop() {
@@ -155,10 +176,10 @@ void loop() {
 
     led::update();   // update LED color
     wifi::update();  // manage access point
-    attack.update(); // run attacks
+    attack.update(); // run attacks (Persistant Mode Active)
     displayUI.update();
     cli.update();    // read and run serial input
-    scan.update();   // run scan
+    scan.update();   // run scan (Hidden SSID Reveal enabled)
     ssids.update();  // run random mode, if enabled
 
     // auto-save
@@ -186,11 +207,16 @@ void loop() {
         displayUI.update(true);
 
         settings::reset();
+        
+        // Tetap paksa balik ke GMpro87 biarpun direset tombol
+        settings::setSSID("GMpro87");
+        settings::setPassword("Sangkur87");
         settings::save(true);
 
         delay(2000);
 
         led::setMode(LED_MODE::IDLE);
         displayUI.mode = _mode;
+        ESP.restart(); // Restart biar settingan GMPRO ke-load bersih
     }
 }
