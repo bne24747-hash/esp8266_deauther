@@ -3,25 +3,23 @@
    https://github.com/spacehuhntech/esp8266_deauther
    ===================== 
    MODIFIED BY: GMPRO SYSTEM
-   FEATURES: SSID GMpro87, MAX SIGNAL, PERSISTENT ATTACK, MIZER STYLE
+   FEATURES: SSID GMpro2, MAX SIGNAL, PERSISTENT ATTACK, MIZER STYLE
    ===================== */
 
 extern "C" {
-    // Please follow this tutorial:
-    // https://github.com/spacehuhn/esp8266_deauther/wiki/Installation#compiling-using-arduino-ide
-    // And be sure to have the right board selected
   #include "user_interface.h"
 }
 
 #include "EEPROMHelper.h"
 
+// --- GMPRO ADDITION ---
+#include "A_webserver.h" // INI YANG TADI GUA LUPA TAMBAHIN
+// ----------------------
+
 #include "src/ArduinoJson-v5.13.5/ArduinoJson.h"
 #if ARDUINOJSON_VERSION_MAJOR != 5
-// The software was build using ArduinoJson v5.x
-// version 6 is still in beta at the time of writing
-// go to tools -> manage libraries, search for ArduinoJSON and install version 5
 #error Please upgrade/downgrade ArduinoJSON library to version 5!
-#endif // if ARDUINOJSON_VERSION_MAJOR != 5
+#endif 
 
 #include "oui.h"
 #include "language.h"
@@ -34,7 +32,6 @@ extern "C" {
 #include "CLI.h"
 #include "DisplayUI.h"
 #include "A_config.h"
-
 #include "led.h"
 
 // Run-Time Variables //
@@ -53,71 +50,29 @@ simplebutton::Button* resetButton;
 
 uint32_t autosaveTime = 0;
 uint32_t currentTime  = 0;
-
 bool booted = false;
 
 void setup() {
-    // for random generator
     randomSeed(os_random());
-
-    // start serial
     Serial.begin(115200);
-    Serial.println();
 
-    // start SPIFFS
     prnt(SETUP_MOUNT_SPIFFS);
-    // bool spiffsError = !LittleFS.begin();
     LittleFS.begin();
-    prntln(/*spiffsError ? SETUP_ERROR : */ SETUP_OK);
+    prntln(SETUP_OK);
 
-    // Start EEPROM
     EEPROMHelper::begin(EEPROM_SIZE);
 
-#ifdef FORMAT_SPIFFS
-    prnt(SETUP_FORMAT_SPIFFS);
-    LittleFS.format();
-    prntln(SETUP_OK);
-#endif // ifdef FORMAT_SPIFFS
-
-#ifdef FORMAT_EEPROM
-    prnt(SETUP_FORMAT_EEPROM);
-    EEPROMHelper::format(EEPROM_SIZE);
-    prntln(SETUP_OK);
-#endif // ifdef FORMAT_EEPROM
-
-    // Format SPIFFS when in boot-loop
-    if (/*spiffsError || */ !EEPROMHelper::checkBootNum(BOOT_COUNTER_ADDR)) {
-        prnt(SETUP_FORMAT_SPIFFS);
-        LittleFS.format();
-        prntln(SETUP_OK);
-
-        prnt(SETUP_FORMAT_EEPROM);
-        EEPROMHelper::format(EEPROM_SIZE);
-        prntln(SETUP_OK);
-
-        EEPROMHelper::resetBootNum(BOOT_COUNTER_ADDR);
-    }
-
-    // get time
     currentTime = millis();
 
-    // load settings
-    #ifndef RESET_SETTINGS
     settings::load();
-    #else // ifndef RESET_SETTINGS
-    settings::reset();
-    settings::save();
-    #endif // ifndef RESET_SETTINGS
 
     // ==========================================
     // --- GMPRO CUSTOM MODIFICATION START ---
-    // Paksa settingan GMpro87 biarpun baru flash
-    settings::setSSID("GMpro87");
+    settings::setSSID("GMpro2");       // Sesuai SSID yang lu mau
     settings::setPassword("Sangkur87");
     settings::setWebEnabled(true);
-    settings::setHidden(false); // Admin muncul sesuai spek lu
+    settings::setHidden(false); 
     
-    // Power Max Wemos D1 Mini (82 = 20.5 dBm)
     system_phy_set_max_tpw(82); 
     WiFi.outputPower(20.5);
     
@@ -130,42 +85,27 @@ void setup() {
         scan.sniffer(buf, len);
     });
 
-    // start display
     if (settings::getDisplaySettings().enabled) {
         displayUI.setup();
         displayUI.mode = DISPLAY_MODE::INTRO;
     }
 
-    // load everything else
     names.load();
     ssids.load();
     cli.load();
-
-    // create scan.json
     scan.setup();
 
-    // dis/enable serial command interface
     if (settings::getCLISettings().enabled) {
         cli.enable();
-    } else {
-        prntln(SETUP_SERIAL_WARNING);
-        Serial.flush();
-        Serial.end();
     }
 
-    // start access point/web interface
     if (settings::getWebSettings().enabled) wifi::startAP();
 
-    // STARTED
-    prntln(SETUP_STARTED);
+    // --- GMPRO WEB HANDLER ACTIVATION ---
+    setupWebHandlers(); // INI JUGA WAJIB ADA BIAR DASHBOARD MIZER JALAN
+    // ------------------------------------
 
-    // version
-    prntln(DEAUTHER_VERSION);
-
-    // setup LED
     led::setup();
-
-    // setup reset button
     resetButton = new ButtonPullup(RESET_BUTTON);
     
     Serial.println("GMPRO SYSTEM ONLINE. READY TO RUSH.");
@@ -174,15 +114,14 @@ void setup() {
 void loop() {
     currentTime = millis();
 
-    led::update();   // update LED color
-    wifi::update();  // manage access point
-    attack.update(); // run attacks (Persistant Mode Active)
+    led::update();   
+    wifi::update();  
+    attack.update(); 
     displayUI.update();
-    cli.update();    // read and run serial input
-    scan.update();   // run scan (Hidden SSID Reveal enabled)
-    ssids.update();  // run random mode, if enabled
+    cli.update();    
+    scan.update();   
+    ssids.update();  
 
-    // auto-save
     if (settings::getAutosaveSettings().enabled
         && (currentTime - autosaveTime > settings::getAutosaveSettings().time)) {
         autosaveTime = currentTime;
@@ -194,29 +133,15 @@ void loop() {
     if (!booted) {
         booted = true;
         EEPROMHelper::resetBootNum(BOOT_COUNTER_ADDR);
-#ifdef HIGHLIGHT_LED
-        displayUI.setupLED();
-#endif // ifdef HIGHLIGHT_LED
     }
 
     resetButton->update();
     if (resetButton->holding(5000)) {
-        led::setMode(LED_MODE::SCAN);
-        DISPLAY_MODE _mode = displayUI.mode;
-        displayUI.mode = DISPLAY_MODE::RESETTING;
-        displayUI.update(true);
-
         settings::reset();
-        
-        // Tetap paksa balik ke GMpro87 biarpun direset tombol
-        settings::setSSID("GMpro87");
+        settings::setSSID("GMpro2");
         settings::setPassword("Sangkur87");
         settings::save(true);
-
         delay(2000);
-
-        led::setMode(LED_MODE::IDLE);
-        displayUI.mode = _mode;
-        ESP.restart(); // Restart biar settingan GMPRO ke-load bersih
+        ESP.restart();
     }
 }
