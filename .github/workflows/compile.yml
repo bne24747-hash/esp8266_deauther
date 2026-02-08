@@ -1,7 +1,7 @@
 name: Build GMpro Firmware
 
 on:
-  workflow_dispatch: # Supaya lu bisa klik tombol "Run" manual
+  workflow_dispatch: # Supaya muncul tombol "Run Workflow" manual
 
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
 
       - name: Compile GMpro
         run: |
-          # Kita compile file .ino yang lu punya di root
+          # Perintah compile untuk Wemos D1 Mini / NodeMCU
           arduino-cli compile --fqbn esp8266:esp8266:d1_mini --output-dir ./output ./esp8266_deauther.ino
 
       - name: Upload Binary (.bin)
