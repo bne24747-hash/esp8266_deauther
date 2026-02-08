@@ -33,9 +33,10 @@ jobs:
 
       - name: Compile GMpro Firmware
         run: |
-          # Mengarahkan ke folder esp8266_deauther sesuai lokasi file .ino
+          # Mengarahkan langsung ke folder tempat file .ino berada
+          # Arduino CLI akan otomatis mencari file .ino yang namanya sama dengan foldernya
           arduino-cli compile --fqbn deauther:esp8266:generic:eesz=4M2M \
-          ./esp8266_deauther/esp8266_deauther.ino --output-dir ./build
+          ./esp8266_deauther --output-dir ./build
 
       - name: Upload Binary
         uses: actions/upload-artifact@v4
