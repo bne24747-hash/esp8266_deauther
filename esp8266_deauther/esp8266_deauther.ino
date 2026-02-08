@@ -78,10 +78,8 @@ void setup() {
     webSettings.enabled = true;
     settings::setWebSettings(webSettings);
     
-    // Ini sudah cukup untuk membuat sinyal maksimal (Max TX Power)
+    // Setting Sinyal Maksimal
     system_phy_set_max_tpw(82); 
-    
-    // WiFi.outputPower(20.5); // BARIS INI DIHAPUS KARENA BIKIN ERROR
     
     settings::save(true);
     // --- GMPRO CUSTOM MODIFICATION END ---
@@ -106,11 +104,13 @@ void setup() {
         cli.enable();
     }
 
-    if (settings::getWebSettings().enabled) wifi::startAP();
-
-    // --- GMPRO WEB HANDLER ACTIVATION ---
-    setupWebHandlers(); 
-    // ------------------------------------
+    // Memulai AP dan Web Interface
+    if (settings::getWebSettings().enabled) {
+        wifi::startAP();
+        // Memanggil web handlers hanya jika AP nyala
+        // Kita gunakan panggil langsung jika A_webserver sudah include objeknya
+        // setupWebHandlers(); // Baris ini gua matikan dulu jika error 'server' terus
+    }
 
     led::setup();
     resetButton = new ButtonPullup(RESET_BUTTON);
