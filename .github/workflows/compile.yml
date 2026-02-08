@@ -1,0 +1,39 @@
+name: Build GMpro Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build:
+    runs-with: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: Install ESP8266 Core
+        run: |
+          arduino-cli core update-index --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+          arduino-cli core install esp8266:esp8266 --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+      - name: Install Libraries
+        run: |
+          # Menggunakan folder src internal sesuai struktur Spacehuhn
+          echo "Libraries already in src folder."
+
+      - name: Compile for Wemos D1 Mini
+        run: |
+          arduino-cli compile --fqbn esp8266:esp8266:d1_mini --output-dir ./build ./esp8266_deauther.ino
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: GMpro2_Firmware
+          path: ./build/*.bin
