@@ -1,4 +1,4 @@
-name: Compile GMpro Deauther Fixed Library
+Name: Compile GMpro Deauther Fixed Library
 
 on: [push, workflow_dispatch]
 
@@ -26,7 +26,6 @@ jobs:
           arduino-cli lib install "SimpleCLI"
           
           # Unzip ArduinoJson versi spesifik yang ada di repo kamu
-          # Pastikan nama file zip di repo kamu benar-benar "ArduinoJson-5.13.5.zip"
           unzip -o ArduinoJson-5.13.5.zip -d /home/runner/Arduino/libraries/
           
           # List library untuk memastikan file ada
@@ -34,10 +33,9 @@ jobs:
 
       - name: Compile GMpro Firmware
         run: |
-          # Menggunakan FQBN paling stabil untuk SDK Deauther
-          # Menghapus vtables dan mmu untuk menghindari 'invalid option'
+          # Mengarahkan ke folder esp8266_deauther sesuai lokasi file .ino
           arduino-cli compile --fqbn deauther:esp8266:generic:eesz=4M2M \
-          ./esp8266_deauther.ino --output-dir ./build
+          ./esp8266_deauther/esp8266_deauther.ino --output-dir ./build
 
       - name: Upload Binary
         uses: actions/upload-artifact@v4
