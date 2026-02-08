@@ -1,4 +1,4 @@
-Name: Compile GMpro Deauther Fixed Library
+name: Compile GMpro Deauther Fixed Library
 
 on: [push, workflow_dispatch]
 
@@ -19,22 +19,14 @@ jobs:
 
       - name: Install Library from Repo Zip
         run: |
-          # Membuat folder library manual
           mkdir -p /home/runner/Arduino/libraries
-          
-          # Mengambil library SimpleCLI
           arduino-cli lib install "SimpleCLI"
-          
-          # Unzip ArduinoJson versi spesifik yang ada di repo kamu
           unzip -o ArduinoJson-5.13.5.zip -d /home/runner/Arduino/libraries/
-          
-          # List library untuk memastikan file ada
           ls -R /home/runner/Arduino/libraries/
 
       - name: Compile GMpro Firmware
         run: |
-          # Mengarahkan langsung ke folder tempat file .ino berada
-          # Arduino CLI akan otomatis mencari file .ino yang namanya sama dengan foldernya
+          # Arahkan ke folder esp8266_deauther
           arduino-cli compile --fqbn deauther:esp8266:generic:eesz=4M2M \
           ./esp8266_deauther --output-dir ./build
 
