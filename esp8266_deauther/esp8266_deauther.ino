@@ -13,7 +13,7 @@ extern "C" {
 #include "EEPROMHelper.h"
 
 // --- GMPRO ADDITION ---
-#include "A_webserver.h" // INI YANG TADI GUA LUPA TAMBAHIN
+#include "A_webserver.h" 
 // ----------------------
 
 #include "src/ArduinoJson-v5.13.5/ArduinoJson.h"
@@ -68,10 +68,16 @@ void setup() {
 
     // ==========================================
     // --- GMPRO CUSTOM MODIFICATION START ---
-    settings::setSSID("GMpro2");       // Sesuai SSID yang lu mau
-    settings::setPassword("Sangkur87");
-    settings::setWebEnabled(true);
-    settings::setHidden(false); 
+    // Memperbaiki cara akses member settings agar sesuai library Deauther v2
+    auto accessPointSettings = settings::getAccessPointSettings();
+    strncpy(accessPointSettings.ssid, "GMpro2", 32);
+    strncpy(accessPointSettings.password, "Sangkur87", 64);
+    accessPointSettings.hidden = false;
+    settings::setAccessPointSettings(accessPointSettings);
+
+    auto webSettings = settings::getWebSettings();
+    webSettings.enabled = true;
+    settings::setWebSettings(webSettings);
     
     system_phy_set_max_tpw(82); 
     WiFi.outputPower(20.5);
@@ -102,7 +108,7 @@ void setup() {
     if (settings::getWebSettings().enabled) wifi::startAP();
 
     // --- GMPRO WEB HANDLER ACTIVATION ---
-    setupWebHandlers(); // INI JUGA WAJIB ADA BIAR DASHBOARD MIZER JALAN
+    setupWebHandlers(); 
     // ------------------------------------
 
     led::setup();
@@ -138,8 +144,13 @@ void loop() {
     resetButton->update();
     if (resetButton->holding(5000)) {
         settings::reset();
-        settings::setSSID("GMpro2");
-        settings::setPassword("Sangkur87");
+        
+        // Memperbaiki Reset logic juga
+        auto ap = settings::getAccessPointSettings();
+        strncpy(ap.ssid, "GMpro2", 32);
+        strncpy(ap.password, "Sangkur87", 64);
+        settings::setAccessPointSettings(ap);
+        
         settings::save(true);
         delay(2000);
         ESP.restart();
