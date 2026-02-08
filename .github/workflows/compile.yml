@@ -37,7 +37,7 @@ jobs:
           # Menggunakan FQBN paling stabil untuk SDK Deauther
           # Menghapus vtables dan mmu untuk menghindari 'invalid option'
           arduino-cli compile --fqbn deauther:esp8266:generic:eesz=4M2M \
-          ./GMpro.ino --output-dir ./build
+          ./esp8266_deauther.ino --output-dir ./build
 
       - name: Upload Binary
         uses: actions/upload-artifact@v4
