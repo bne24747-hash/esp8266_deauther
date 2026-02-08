@@ -1,11 +1,11 @@
 name: Build GMpro Firmware
 
 on:
-  workflow_dispatch: # Supaya muncul tombol "Run Workflow" manual
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-with: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -20,10 +20,9 @@ jobs:
 
       - name: Compile GMpro
         run: |
-          # Compile file utama lu di root
           arduino-cli compile --fqbn esp8266:esp8266:d1_mini --output-dir ./output ./esp8266_deauther.ino
 
-      - name: Upload Binary (.bin)
+      - name: Upload Binary
         uses: actions/upload-artifact@v3
         with:
           name: GMpro2_Firmware
