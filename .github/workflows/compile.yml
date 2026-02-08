@@ -20,7 +20,7 @@ jobs:
 
       - name: Compile GMpro
         run: |
-          # Perintah compile untuk Wemos D1 Mini / NodeMCU
+          # Compile file utama lu di root
           arduino-cli compile --fqbn esp8266:esp8266:d1_mini --output-dir ./output ./esp8266_deauther.ino
 
       - name: Upload Binary (.bin)
